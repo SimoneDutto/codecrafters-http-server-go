@@ -82,13 +82,13 @@ func handleRequest(conn net.Conn) {
 			}
 		} else if statusLine.Method == "GET" && strings.HasPrefix(statusLine.RequestTarget, "/echo") {
 			echoString := path.Base(statusLine.RequestTarget)
-			echoString, ok := encodeBody(echoString, header.Get("Accept-Encoding"))
+			echoString, enc := encodeBody(echoString, header.Get("Accept-Encoding"))
 			stringReader := strings.NewReader(echoString)
 			stringReadCloser := io.NopCloser(stringReader)
 			h := http.Header{}
 			h.Add("Content-Type", "text/plain")
-			if ok {
-				h.Add("Content-Encoding", header.Get("Accept-Encoding"))
+			if enc != "" {
+				h.Add("Content-Encoding", enc)
 			}
 			response := http.Response{
 				Status:        "200 OK",
@@ -213,17 +213,17 @@ func handleRequest(conn net.Conn) {
 	}
 }
 
-func encodeBody(body string, encoding string) (string, bool) {
+func encodeBody(body string, encoding string) (string, string) {
 	for _, enc := range strings.Split(encoding, ", ") {
 		fmt.Println(enc)
 		if enc == "gzip" {
 			var b bytes.Buffer
 			gz := gzip.NewWriter(&b)
 			gz.Write([]byte(body))
-			return base64.StdEncoding.EncodeToString(b.Bytes()), true
+			return base64.StdEncoding.EncodeToString(b.Bytes()), enc
 		}
 	}
-	return body, false
+	return body, ""
 }
 
 func parseHeader(header []string) http.Header {
