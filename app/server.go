@@ -57,7 +57,8 @@ func handleRequest(conn net.Conn) {
 	httpRequestParts := strings.Split(string(b), "\r\n")
 	if len(httpRequestParts) > 0 {
 		statusLine, err := parseStatusLine(httpRequestParts[0])
-		header := parseHeader(httpRequestParts[1:])
+		header := parseHeader(httpRequestParts[1 : len(httpRequestParts)-2])
+		body := httpRequestParts[len(httpRequestParts)-1]
 		_ = header
 		if err != nil {
 			fmt.Println(err)
@@ -150,6 +151,35 @@ func handleRequest(conn net.Conn) {
 					ContentLength: size,
 					Body:          io.NopCloser(reader),
 				}
+			}
+			err = response.Write(conn)
+			if err != nil {
+				fmt.Println("Error during write", err)
+			}
+		} else if statusLine.Method == "POST" && strings.HasPrefix(statusLine.RequestTarget, "/files") {
+			fileName := path.Base(statusLine.RequestTarget)
+			filePath := path.Join(dir, fileName)
+			file, err := os.Create(filePath)
+			if err != nil {
+				fmt.Println("Error during write", err)
+				os.Exit(1)
+			}
+			_, err = file.WriteString(body)
+			if err != nil {
+				fmt.Println("Error during write", err)
+				os.Exit(1)
+			}
+			h := http.Header{}
+			h.Add("Content-Type", "application/octet-stream")
+			response := http.Response{
+				Status:        "201 Created",
+				StatusCode:    201,
+				Proto:         "HTTP/1.1",
+				ProtoMajor:    1,
+				ProtoMinor:    1,
+				Header:        h,
+				ContentLength: 2,
+				Body:          io.NopCloser(strings.NewReader("OK")),
 			}
 			err = response.Write(conn)
 			if err != nil {
