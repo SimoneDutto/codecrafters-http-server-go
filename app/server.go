@@ -68,7 +68,7 @@ func main() {
 			stringReadCloser := io.NopCloser(stringReader)
 			h := http.Header{}
 			h.Add("Content-Type", "text/plain")
-			h.Add("Content-Lenght", fmt.Sprint(len(echoString)))
+			h.Add("Content-Length", fmt.Sprint(len(echoString)))
 			response := http.Response{
 				Status:     "200 OK",
 				StatusCode: 200,
