@@ -1,7 +1,9 @@
 package main
 
 import (
+	"bufio"
 	"errors"
+	"flag"
 	"fmt"
 	"io"
 	"net/http"
@@ -19,11 +21,15 @@ type StatusLine struct {
 	HttpVersion   string
 }
 
+var dir string
+
 func main() {
 	// You can use print statements as follows for debugging, they'll be visible when running tests.
 	fmt.Println("Logs from your program will appear here!")
 
+	flag.StringVar(&dir, "directory", "/tmp/", "directory")
 	// Uncomment this block to pass the first stage
+	flag.Parse()
 
 	l, err := net.Listen("tcp", "0.0.0.0:4221")
 	if err != nil {
@@ -110,6 +116,42 @@ func handleRequest(conn net.Conn) {
 				Body:          stringReadCloser,
 			}
 			err := response.Write(conn)
+			if err != nil {
+				fmt.Println("Error during write", err)
+			}
+		} else if statusLine.Method == "GET" && strings.HasPrefix(statusLine.RequestTarget, "/files") {
+			fileName := path.Base(statusLine.RequestTarget)
+			filePath := path.Join(dir, fileName)
+			file, err := os.Open(filePath)
+			defer file.Close()
+			var response http.Response
+			if err != nil {
+				fmt.Println("Error during opening file", err)
+				response = http.Response{
+					Status:     "404 Not Found",
+					StatusCode: 404,
+					Proto:      "HTTP/1.1",
+					ProtoMajor: 1,
+					ProtoMinor: 1,
+				}
+			} else {
+				reader := bufio.NewReader(file)
+				fStat, _ := file.Stat()
+				size := fStat.Size()
+				h := http.Header{}
+				h.Add("Content-Type", "application/octet-stream")
+				response = http.Response{
+					Status:        "200 OK",
+					StatusCode:    200,
+					Proto:         "HTTP/1.1",
+					ProtoMajor:    1,
+					ProtoMinor:    1,
+					Header:        h,
+					ContentLength: size,
+					Body:          io.NopCloser(reader),
+				}
+			}
+			err = response.Write(conn)
 			if err != nil {
 				fmt.Println("Error during write", err)
 			}
