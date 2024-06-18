@@ -30,11 +30,18 @@ func main() {
 		fmt.Println("Failed to bind to port 4221")
 		os.Exit(1)
 	}
-	conn, err := l.Accept()
-	if err != nil {
-		fmt.Println("Error accepting connection: ", err.Error())
-		os.Exit(1)
+	for {
+		conn, err := l.Accept()
+		if err != nil {
+			fmt.Println("Error accepting connection: ", err.Error())
+			os.Exit(1)
+		}
+		go handleRequest(conn)
 	}
+}
+
+func handleRequest(conn net.Conn) {
+	fmt.Println("Receiving request")
 	b := make([]byte, 4048)
 	n, err := conn.Read(b)
 	if err != nil || n == 0 {
