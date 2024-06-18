@@ -8,6 +8,7 @@ import (
 	"io"
 	"net/http"
 	"path"
+	"strconv"
 	"strings"
 
 	// Uncomment this block to pass the first stage
@@ -159,12 +160,13 @@ func handleRequest(conn net.Conn) {
 		} else if statusLine.Method == "POST" && strings.HasPrefix(statusLine.RequestTarget, "/files") {
 			fileName := path.Base(statusLine.RequestTarget)
 			filePath := path.Join(dir, fileName)
+			fileSize, _ := strconv.Atoi(header.Get("Content-Size"))
 			file, err := os.Create(filePath)
 			if err != nil {
 				fmt.Println("Error during write", err)
 				os.Exit(1)
 			}
-			_, err = file.WriteString(body)
+			_, err = file.WriteString(body[:fileSize])
 			if err != nil {
 				fmt.Println("Error during write", err)
 				os.Exit(1)
