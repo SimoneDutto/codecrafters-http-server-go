@@ -2,6 +2,9 @@ package main
 
 import (
 	"bufio"
+	"bytes"
+	"compress/gzip"
+	"encoding/base64"
 	"errors"
 	"flag"
 	"fmt"
@@ -79,6 +82,7 @@ func handleRequest(conn net.Conn) {
 			}
 		} else if statusLine.Method == "GET" && strings.HasPrefix(statusLine.RequestTarget, "/echo") {
 			echoString := path.Base(statusLine.RequestTarget)
+			echoString = encodeBody(echoString, header.Get("Accept-Encoding"))
 			stringReader := strings.NewReader(echoString)
 			stringReadCloser := io.NopCloser(stringReader)
 			h := http.Header{}
@@ -204,6 +208,16 @@ func handleRequest(conn net.Conn) {
 		fmt.Println("Bad formatted request")
 		os.Exit(1)
 	}
+}
+
+func encodeBody(body string, encoding string) string {
+	if encoding == "gzip" {
+		var b bytes.Buffer
+		gz := gzip.NewWriter(&b)
+		gz.Write([]byte(body))
+		return base64.StdEncoding.EncodeToString(b.Bytes())
+	}
+	return body
 }
 
 func parseHeader(header []string) http.Header {
