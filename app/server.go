@@ -93,13 +93,14 @@ func main() {
 			h := http.Header{}
 			h.Add("Content-Type", "text/plain")
 			response := http.Response{
-				Status:     "200 OK",
-				StatusCode: 200,
-				Proto:      "HTTP/1.1",
-				ProtoMajor: 1,
-				ProtoMinor: 1,
-				Header:     h,
-				Body:       stringReadCloser,
+				Status:        "200 OK",
+				StatusCode:    200,
+				Proto:         "HTTP/1.1",
+				ProtoMajor:    1,
+				ProtoMinor:    1,
+				Header:        h,
+				ContentLength: int64(len(userAgent)),
+				Body:          stringReadCloser,
 			}
 			err := response.Write(conn)
 			if err != nil {
