@@ -4,7 +4,6 @@ import (
 	"bufio"
 	"bytes"
 	"compress/gzip"
-	"encoding/base64"
 	"errors"
 	"flag"
 	"fmt"
@@ -220,7 +219,7 @@ func encodeBody(body string, encoding string) (string, string) {
 			var b bytes.Buffer
 			gz := gzip.NewWriter(&b)
 			gz.Write([]byte(body))
-			return base64.StdEncoding.EncodeToString(b.Bytes()), enc
+			return string(b.Bytes()), enc
 		}
 	}
 	return body, ""
