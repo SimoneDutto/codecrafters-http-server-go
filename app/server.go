@@ -68,15 +68,16 @@ func main() {
 			stringReadCloser := io.NopCloser(stringReader)
 			h := http.Header{}
 			h.Add("Content-Type", "text/plain")
-			h.Add("Content-Length", fmt.Sprint(len(echoString)))
+			fmt.Println(h)
 			response := http.Response{
-				Status:     "200 OK",
-				StatusCode: 200,
-				Proto:      "HTTP/1.1",
-				ProtoMajor: 1,
-				ProtoMinor: 1,
-				Header:     h,
-				Body:       stringReadCloser,
+				Status:        "200 OK",
+				StatusCode:    200,
+				Proto:         "HTTP/1.1",
+				ProtoMajor:    1,
+				ProtoMinor:    1,
+				Header:        h,
+				ContentLength: int64(len(echoString)),
+				Body:          stringReadCloser,
 			}
 			err := response.Write(conn)
 			if err != nil {
