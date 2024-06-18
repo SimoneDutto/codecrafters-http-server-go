@@ -160,7 +160,7 @@ func handleRequest(conn net.Conn) {
 		} else if statusLine.Method == "POST" && strings.HasPrefix(statusLine.RequestTarget, "/files") {
 			fileName := path.Base(statusLine.RequestTarget)
 			filePath := path.Join(dir, fileName)
-			fileSize, _ := strconv.Atoi(header.Get("Content-Size"))
+			fileSize, _ := strconv.Atoi(header.Get("Content-Length"))
 			file, err := os.Create(filePath)
 			if err != nil {
 				fmt.Println("Error during write", err)
