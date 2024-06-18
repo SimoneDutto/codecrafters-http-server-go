@@ -68,7 +68,6 @@ func main() {
 			stringReadCloser := io.NopCloser(stringReader)
 			h := http.Header{}
 			h.Add("Content-Type", "text/plain")
-			fmt.Println(h)
 			response := http.Response{
 				Status:        "200 OK",
 				StatusCode:    200,
@@ -78,6 +77,29 @@ func main() {
 				Header:        h,
 				ContentLength: int64(len(echoString)),
 				Body:          stringReadCloser,
+			}
+			err := response.Write(conn)
+			if err != nil {
+				fmt.Println("Error during write", err)
+			}
+		} else if statusLine.Method == "GET" && strings.HasPrefix(statusLine.RequestTarget, "/user-agent") {
+			userAgent := header.Get("user-agent")
+			if userAgent == "" {
+				fmt.Println("Error during getting user-agent")
+				os.Exit(1)
+			}
+			stringReader := strings.NewReader(userAgent)
+			stringReadCloser := io.NopCloser(stringReader)
+			h := http.Header{}
+			h.Add("Content-Type", "text/plain")
+			response := http.Response{
+				Status:     "200 OK",
+				StatusCode: 200,
+				Proto:      "HTTP/1.1",
+				ProtoMajor: 1,
+				ProtoMinor: 1,
+				Header:     h,
+				Body:       stringReadCloser,
 			}
 			err := response.Write(conn)
 			if err != nil {
