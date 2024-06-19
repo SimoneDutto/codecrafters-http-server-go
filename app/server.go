@@ -82,6 +82,7 @@ func handleRequest(conn net.Conn) {
 		} else if statusLine.Method == "GET" && strings.HasPrefix(statusLine.RequestTarget, "/echo") {
 			echoString := path.Base(statusLine.RequestTarget)
 			echoString, enc := encodeBody(echoString, header.Get("Accept-Encoding"))
+			fmt.Println(echoString)
 			stringReader := strings.NewReader(echoString)
 			stringReadCloser := io.NopCloser(stringReader)
 			h := http.Header{}
@@ -214,12 +215,12 @@ func handleRequest(conn net.Conn) {
 
 func encodeBody(body string, encoding string) (string, string) {
 	for _, enc := range strings.Split(encoding, ", ") {
-		fmt.Println(enc)
 		if enc == "gzip" {
 			var b bytes.Buffer
 			gz := gzip.NewWriter(&b)
 			gz.Write([]byte(body))
-			return string(b.Bytes()), enc
+			gz.Close()
+			return string(b.Bytes()[:]), enc
 		}
 	}
 	return body, ""
