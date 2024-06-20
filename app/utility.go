@@ -79,9 +79,11 @@ func parseData(conn net.Conn) (StatusLine, http.Header, string) {
 		return statusLine, h, string([]byte{})
 	}
 	remaining := contentLength - (len(bufInit) - endHeaders)
+	if remaining <= 0 {
+		return statusLine, h, string(bufInit[endHeaders:])
+	}
 	buf := make([]byte, remaining) // big buffer
 	conn.Read(buf)
 	buf = append(bufInit[endHeaders:], buf...)
-
 	return statusLine, h, string(buf)
 }
